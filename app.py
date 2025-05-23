@@ -21,7 +21,7 @@ app = FastAPI()
 class URLRequest(BaseModel):
     url: str
 
-@app.post("/predict")
+@app.post("api/vi/predict")
 def predict_url(data: URLRequest):
     url = data.url
 
