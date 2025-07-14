@@ -71,7 +71,20 @@ st.set_page_config(page_title="Phishing Website Detector", layout="centered")
 st.title("🔍 Phishing Website Detection Tool")
 st.markdown("Enter a URL below to analyze its safety.")
 
-url = st.text_input("Website URL", placeholder="https://example.com")
+# Add error handling for URL input
+try:
+    url = st.text_input("Website URL", placeholder="https://example.com")
+    if url and not url.startswith(('http://', 'https://')):
+        st.error("Please enter a valid URL starting with 'http://' or 'https://'")
+        url = None
+    elif url:
+        parsed_url = urlparse(url)
+        if not all([parsed_url.scheme, parsed_url.netloc]):
+            st.error("Please enter a complete and valid URL")
+            url = None
+except Exception as e:
+    st.error(f"An error occurred while processing the URL: {str(e)}")
+    url = None
 
 def analyze_url():
     if url:
