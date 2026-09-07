@@ -3,23 +3,37 @@ import pandas as pd
 from scipy.sparse import hstack, csr_matrix
 import pickle
 import numpy as np
+from fastapi import FastAPI
+from pydantic import BaseModel
+import csv
+import os
 
-# Load the trained vectorizer
-with open('model/tfidf_vectorizer.sav', 'rb') as file:
-    tfidf = pickle.load(file)
+
+# File to store user-submitted data
+DATA_FILE = "user_submissions.csv"
+
+# Ensure the file exists
+if not os.path.exists(DATA_FILE):
+    with open(DATA_FILE, "w", newline="") as f:
+        writer = csv.writer(f)
+        writer.writerow(["timestamp", "url", "detection_result", "user_label", "comments"])
 
 # Load the trained model
 with open('model/phishing_url_detector.sav', 'rb') as file:
     model = pickle.load(file)
 
-# FastAPI setup
-from fastapi import FastAPI
-from pydantic import BaseModel
-
 app = FastAPI()
 
 class URLRequest(BaseModel):
     url: str
+
+class URLFeedbackRequest(BaseModel):
+    timestamp: str
+    url: str
+    detection_result: str
+    user_label: str
+    comments: str = ""
+
 
 @app.post("/api/v1/predict")
 def predict_url(data: URLRequest):
@@ -27,11 +41,9 @@ def predict_url(data: URLRequest):
 
     # Extract features
     external_struct = pd.DataFrame([extract_features(url)])
-    external_text = tfidf.transform([url]) # Also transform the single input URL
-    external_combined = hstack([csr_matrix(external_struct.values), external_text])
 
     # Predict
-    prob = model.predict_proba(external_combined)[:, 1]
+    prob = model.predict_proba(external_struct)[:, 1]
 
     # Convert numpy values to Python native types
     prediction = bool(prob > 0.5)
@@ -43,3 +55,35 @@ def predict_url(data: URLRequest):
         "url": url
     }
 
+
+@app.post("/api/v1/feedback")
+def predict_with_feedback(data: URLFeedbackRequest):
+    url = data.url
+
+    # Extract URL features
+    external_struct = pd.DataFrame([extract_features(url)])
+
+    # Get probability of phishing/malicious URL
+    prob = model.predict_proba(external_struct)[:, 1]
+
+    probability = float(prob[0])
+
+    # 0.5 threshold
+    prediction = probability > 0.5
+
+    # Convert model prediction to a readable result
+    model_result = "Malicious" if prediction else "Safe"
+
+    with open(DATA_FILE, "a", newline="") as f:
+                writer = csv.writer(f)
+                writer.writerow([
+                    data.timestamp,
+                    url,
+                    model_result,
+                    data.user_label,
+                    data.comments
+                ])
+
+    return {
+        "message": "Thank you! Your feedback has been recorded."
+    }
