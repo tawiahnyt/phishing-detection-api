@@ -30,9 +30,10 @@ class URLFeedbackRequest(BaseModel):
 
 
 @app.get("/")
-def hello():
+def home():
     return {
-        "message": "Hello World!",
+        "status": "ok",
+        "message": "Phishing Detection API is running"
     }
 
 
