@@ -1,27 +1,20 @@
 from database import Feedback, SessionLocal
 from features_extraction import extract_features
 import pandas as pd
-import pickle
+import joblib
 import numpy as np
 from fastapi import FastAPI
 from pydantic import BaseModel
 from datetime import datetime
-
 from pathlib import Path
 
-model_path = Path("model/phishing_url_detector.sav")
-
-print("MODEL EXISTS:", model_path.exists())
-print("MODEL SIZE:", model_path.stat().st_size)
-print("MODEL HEADER:", model_path.read_bytes()[:32].hex())
-
-with open(model_path, "rb") as file:
-    model = pickle.load(file)
 
 
 # Load the trained model
-with open('model/phishing_url_detector.sav', 'rb') as file:
-    model = pickle.load(file)
+model_path = Path("model/phishing_url_model.joblib")
+
+with open(model_path, "rb") as file:
+    model = joblib.load(file)
 
 app = FastAPI()
 
