@@ -1,10 +1,10 @@
 from features_extraction import extract_features
 import pandas as pd
-from scipy.sparse import hstack, csr_matrix
 import pickle
 import numpy as np
 from fastapi import FastAPI
 from pydantic import BaseModel
+from datetime import datetime
 import csv
 import os
 
@@ -33,6 +33,14 @@ class URLFeedbackRequest(BaseModel):
     detection_result: str
     user_label: str
     comments: str = ""
+
+
+@app.get("/api/v1/health")
+def health():
+    return {
+        "health": "healthy",
+        "time": datetime.now()
+    }
 
 
 @app.post("/api/v1/predict")
