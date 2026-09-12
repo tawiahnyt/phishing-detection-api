@@ -24,6 +24,13 @@ class URLFeedbackRequest(BaseModel):
     comments: str = ""
 
 
+@app.get("/")
+def hello():
+    return {
+        "message": "Hello World!",
+    }
+
+
 @app.get("/api/v1/health")
 def health():
     return {
