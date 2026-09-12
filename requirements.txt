@@ -1,4 +1,4 @@
-fastapi
+fastapi[standard]
 uvicorn
 numpy
 scikit-learn==1.9.0
