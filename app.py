@@ -7,6 +7,18 @@ from fastapi import FastAPI
 from pydantic import BaseModel
 from datetime import datetime
 
+from pathlib import Path
+
+model_path = Path("model/phishing_url_detector.sav")
+
+print("MODEL EXISTS:", model_path.exists())
+print("MODEL SIZE:", model_path.stat().st_size)
+print("MODEL HEADER:", model_path.read_bytes()[:32].hex())
+
+with open(model_path, "rb") as file:
+    model = pickle.load(file)
+
+
 # Load the trained model
 with open('model/phishing_url_detector.sav', 'rb') as file:
     model = pickle.load(file)
