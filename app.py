@@ -8,14 +8,8 @@ from pydantic import BaseModel
 from datetime import datetime
 
 # Load the trained model
-from pathlib import Path
-
-BASE_DIR = Path(__file__).resolve().parent
-MODEL_PATH = BASE_DIR / "model" / "phishing_url_detector.sav"
-
-with open(MODEL_PATH, "rb") as file:
+with open('model/phishing_url_detector.sav', 'rb') as file:
     model = pickle.load(file)
-
 
 app = FastAPI()
 
