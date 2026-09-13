@@ -1,9 +1,33 @@
-
 # URL Phishing Detection API
 
-This project is a FastAPI-based web service that detects phishing URLs using machine learning. The service provides a REST API endpoint that analyzes URLs and determines whether they are potentially phishing attempts.
+A small FastAPI service that analyzes URLs and predicts whether they might be phishing attempts using a trained machine learning model (Random Forest) combined with TF-IDF text features and structural URL features.
+
+Table of Contents
+- About
+- Features
+- Project Structure
+- Requirements
+- Installation
+- Running
+- API Usage
+- Model files
+- Contributing
+- License
+
+## About
+
+This repository provides a REST API to classify URLs as phishing or benign. The service extracts structural and textual features from the URL, vectorizes text-based parts using TF-IDF, and feeds features to a trained Random Forest classifier to return a prediction and confidence score.
+
+## Features
+
+- Structural URL features (lengths, counts, suspicious characters)
+- Protocol and domain analysis (https usage, subdomain patterns, IP addresses)
+- TF-IDF text features on URL tokens
+- Ensemble prediction with confidence scores
+- Simple REST API for easy integration
 
 ## Project Structure
+
 ```
 url_api/
 ├── app.py                     # Main FastAPI application
@@ -11,145 +35,117 @@ url_api/
 ├── model/
 │   ├── phishing_url_detector.sav  # Trained ML model
 │   └── tfidf_vectorizer.sav  # Fitted TF-IDF vectorizer
-└── requirements.txt          # Project dependencies
+└── requirements.txt           # Project dependencies
 ```
 
-## Features
+## Requirements
 
-1. **URL Analysis**: Extracts various features from URLs including:
-   - Basic structural features (URL length, domain length, path length)
-   - Protocol analysis (HTTPS usage)
-   - Character and symbol analysis
-   - Structural red flags (IP addresses, suspicious characters)
-   - Subdomain analysis
-   - Suspicious keyword detection
-   - TLD and file extension analysis
+- Python 3.12+
+- See requirements.txt for package versions (FastAPI, scikit-learn, pandas, numpy, uvicorn, etc.)
 
-2. **Machine Learning Model**:
-   - Uses Random Forest Classifier for prediction
-   - Combines TF-IDF features with structural features
-   - Provides confidence scores for predictions
+## Installation
 
-3. **REST API Endpoint**:
-   - POST `/predict` endpoint
-   - Accepts JSON input with URL
-   - Returns prediction results with confidence scores
-
-## Technical Stack
-
-- **Framework**: FastAPI
-- **ML Libraries**: scikit-learn, pandas, numpy
-- **Feature Engineering**: TF-IDF Vectorization, Custom Feature Extraction
-- **Development Tools**: Python 3.12, uvicorn
-
-## API Usage
-
-The API accepts POST requests with JSON payload:
-```json
-{
-    "url": "https://example.com"
-}
-```
-
-Response format:
-```json
-{
-    "url_prediction": true/false,
-    "url_confidence": 0.95,
-    "url": "https://example.com"
-}
-```
-
-Where:
-- `url_prediction`: `true` if the URL is suspected to be phishing, `false` otherwise
-- `url_confidence`: Confidence score of the prediction (0-1)
-- `url`: The original URL that was analyzed
-
-The project uses a comprehensive set of dependencies managed through `requirements.txt`, including FastAPI, scikit-learn, pandas, and other necessary packages for machine learning and web service functionality.
-
-
-
-
-
-
-          
-# Running the URL Phishing Detection API
-
-Here's how to set up and run the project:
-
-## 1. Environment Setup
-
-First, make sure you have Python 3.12 installed. Then, set up a virtual environment and install dependencies:
+1. Create a virtual environment:
 
 ```bash
 python -m venv .venv
 ```
 
-Activate the virtual environment:
+2. Activate it:
 
-For Windows:
+On macOS / Linux:
+```bash
+source .venv/bin/activate
+```
+On Windows:
 ```bash
 .venv\Scripts\activate
 ```
 
-Install dependencies:
+3. Install dependencies:
 ```bash
-pip install -r requirements.txt
+pip install -r url_api/requirements.txt
 ```
 
-## 2. Project Structure
-The project is already set up with the following structure:
-- `app.py` - Main FastAPI application
-- `features_extraction.py` - URL feature extraction logic
-- `model/` - Contains trained models
-  - `phishing_url_detector.sav` - Trained Random Forest model
-  - `tfidf_vectorizer.sav` - Fitted TF-IDF vectorizer
-- `requirements.txt` - Project dependencies
+## Running the API
 
-## 3. Running the API
-
-Start the FastAPI server using uvicorn:
-```bash
-uvicorn app:app --reload
-```
-
-The API will be available at `http://127.0.0.1:8000`
-
-## 4. Testing the API
-
-You can test the API using curl, Postman, or any HTTP client. Here's an example using curl:
+Start the server with uvicorn (module path points to the package folder):
 
 ```bash
-curl -X POST "http://127.0.0.1:8000/predict" -H "Content-Type: application/json" -d "{\"url\":\"https://example.com\"}"
+uvicorn url_api.app:app --reload
 ```
 
-Expected response:
+The API will be available at: http://127.0.0.1:8000
+
+Interactive docs:
+- Swagger UI: http://127.0.0.1:8000/docs
+- ReDoc: http://127.0.0.1:8000/redoc
+
+## API Usage
+
+POST /predict
+
+Request body (JSON):
+
 ```json
 {
-    "url_prediction": false,
-    "url_confidence": 0.95,
-    "url": "https://example.com"
+  "url": "https://example.com"
 }
 ```
 
-## 5. API Documentation
+Example curl:
 
-FastAPI automatically generates interactive API documentation. After starting the server, you can access:
-- Swagger UI: `http://127.0.0.1:8000/docs`
-- ReDoc: `http://127.0.0.1:8000/redoc`
+```bash
+curl -X POST "http://127.0.0.1:8000/predict" \
+  -H "Content-Type: application/json" \
+  -d '{"url":"https://example.com"}'
+```
 
-## 6. Features
+Example response:
 
-The API analyzes URLs based on multiple features:
-- URL structure analysis
-- Domain characteristics
-- Presence of suspicious elements
-- TF-IDF based text analysis
-- Machine learning-based prediction
+```json
+{
+  "url_prediction": false,
+  "url_confidence": 0.95,
+  "url": "https://example.com"
+}
+```
 
-The response includes:
-- Prediction (true = phishing, false = safe)
-- Confidence score (0-1)
-- Original URL
+Fields:
+- url_prediction: true if predicted phishing, false otherwise
+- url_confidence: model confidence score (0.0 - 1.0)
+- url: original URL sent in the request
 
-The model combines both structural features and TF-IDF vectorization for accurate phishing detection.
+## Model files
+
+Place the trained model artifacts in `url_api/model/`:
+- `phishing_url_detector.sav` — trained Random Forest model
+- `tfidf_vectorizer.sav` — fitted TF-IDF vectorizer
+
+If you retrain models, update the files in that directory and ensure they remain compatible with the feature extraction code.
+
+## Running locally & development notes
+
+- Ensure model files are present before starting the server.
+- If you change feature extraction, retrain and export the model and vectorizer.
+- Add tests around `features_extraction.py` if you plan to refactor feature logic.
+
+## Contributing
+
+Contributions are welcome. Suggested workflow:
+
+1. Fork the repository
+2. Create a feature branch (e.g., `fix/readme`)
+3. Make changes and add tests where applicable
+4. Open a pull request describing your change
+
+## License
+
+This project is provided under the MIT License. See LICENSE for details.
+
+---
+
+If you'd like, I can:
+
+- fix the uvicorn run command or other details to match your entrypoint if it's different (I tried `url_api.app:app` which matches the structure shown).
+- add a short example of how the prediction payload is validated by FastAPI (request model) if you want request schema docs.
